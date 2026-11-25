@@ -1,14 +1,70 @@
 global printf
 global uint_to_string
 
-section .text 
+section .bss
+ buffer resb 32
+
+section .text
+
 printf:
- mov rdx, rsi
- mov rsi, rdi
- mov rax, 1
- mov rdi, 1
+ push rbx
+ push r12
+ push r13
+ push r14
+ mov r12, rdi
+ mov r13, rsi
+ mov r14, rdx
+ xor ebx, ebx ; argument counter
+.parse:
+ mov al,[r12]
+ test al,al
+ jz .finish
+ cmp al,'%'
+ je .specifier
+ mov [rel buffer],al
+ mov eax,1
+ mov edi,1
+ lea rsi,[rel buffer]
+ mov edx,1
  syscall
- ret
+ inc r12
+ jmp .parse
+.specifier:
+ inc r12
+ mov al,[r12]
+ cmp al, 'u'
+ je .unsigned
+ inc r12
+ jmp .parse
+.unsigned:
+ cmp ebx,0
+ je .arg1
+ cmp ebx,1
+ je .arg2
+ xor eax,eax
+ jmp .convert
+.arg1:
+ mov rdi,r13
+ jmp .convert
+.arg2:
+ mov rdi,r14
+.convert:
+ inc ebx
+ lea rsi, [rel buffer]
+ call uint_to_string
+ mov rdx,rax
+ mov eax,1
+ mov edi,1
+ lea rsi,[rel buffer]
+ syscall
+ inc r12
+ jmp .parse
+.finish:
+pop r14
+pop r13
+pop r12
+pop rbx
+ret
 
 uint_to_string:
  mov rax, rdi    ;store value in rax
@@ -43,5 +99,33 @@ uint_to_string:
 .done:
 mov rax,r10
 ret
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
