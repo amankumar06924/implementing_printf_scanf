@@ -1,19 +1,27 @@
 global _start
+extern scanf
 extern printf
 
 section .data
-  formate db "number=",10,0
+    format_in db "%u", 0
+    format_out db "entered: %u", 10, 0
+
+section .bss
+    number resq 1
 
 section .text
 
 _start:
-  mov rdi, formate
-  mov rsi, 12345
-  call printf
+    lea rdi, [rel format_in]
+    lea rsi, [rel number]
+    call scanf
+    test rax, rax
+    jz .exit
+    lea rdi, [rel format_out]
+    mov rsi, [rel number]
+    call printf
+.exit:
+    mov eax, 60
+    xor edi, edi
+    syscall
 
-  mov edi,0
-  jmp end
-
-end:
-  mov rax, 60
-  syscall
